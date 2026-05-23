@@ -786,8 +786,10 @@ function playChannel(id, name, title, allChs){
       if(ch._iframeSrc) allRows.push({label:`Server ${i+1}`,url:ch._iframeSrc});
     });
     const firstUrl = (firstCh._iframeSrc) || (chs.find(ch=>ch._iframeSrc)||{})._iframeSrc;
+    // store urls on window to avoid quote escaping issues
+    window._srvUrls = allRows.map(r=>r.url);
     document.getElementById('srvrow').innerHTML=allRows.map((r,i)=>
-      `<div class="srv${i===0?' on':''}" id="srv${i}" onclick="switchSrv(${i},'${r.url.replace(/'/g,\"\\'\")}',this)">${r.label}</div>`
+      `<div class="srv${i===0?' on':''}" id="srv${i}" onclick="switchSrvIdx(${i},this)">${r.label}</div>`
     ).join('');
     if(firstUrl) loadFrame(firstUrl, name);
     else{ document.getElementById('pload').innerHTML='<p style="color:var(--sub)">No stream available</p>'; }
@@ -799,11 +801,17 @@ function playChannel(id, name, title, allChs){
     chs.slice(1,4).forEach((ch,ci)=>
       allRows.push({label:`Alt ${ci+1}: ${ch.channel_name}`,url:dlStreamUrl(ch.channel_id)})
     );
+    window._srvUrls = allRows.map(r=>r.url);
     document.getElementById('srvrow').innerHTML=allRows.map((r,i)=>
-      `<div class="srv${i===0?' on':''}" id="srv${i}" onclick="switchSrv(${i},'${r.url}',this)">${r.label}</div>`
+      `<div class="srv${i===0?' on':''}" id="srv${i}" onclick="switchSrvIdx(${i},this)">${r.label}</div>`
     ).join('');
     loadFrame(dlStreamUrl(id,'stream'), name);
   }
+}
+
+function switchSrvIdx(idx, el){
+  const url = (window._srvUrls||[])[idx];
+  if(url) switchSrv(idx, url, el);
 }
 
 function switchSrv(idx, url, el){
