@@ -28,6 +28,19 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;over
 ::-webkit-scrollbar-thumb{background:var(--grn);border-radius:2px}
 ::-webkit-scrollbar-track{background:transparent}
 
+
+/* ── SOURCE STATUS BANNER ── */
+#srcBanner{
+  display:flex;align-items:center;gap:7px;padding:6px 14px;
+  font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+  border-bottom:1px solid var(--brd);background:var(--bg2);color:var(--sub);
+  position:sticky;top:54px;z-index:200;
+}
+#srcBanner.ok{color:var(--grn);border-color:rgba(0,255,135,.15)}
+#srcBanner.warn{color:var(--gold);border-color:rgba(255,193,7,.15)}
+#srcBanner.err{color:var(--red);border-color:rgba(255,59,92,.15)}
+.src-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:currentColor}
+
 /* ── NOISE OVERLAY ── */
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
 
@@ -282,6 +295,9 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
   <input type="text" placeholder="Search matches, teams, channels..." id="msi" oninput="doSearch(this.value)" autocomplete="off">
 </div>
 
+<!-- SOURCE STATUS -->
+<div id="srcBanner"><div class="src-dot"></div><span id="srcTxt">Connecting to stream sources...</span></div>
+
 <!-- HERO -->
 <div id="hero">
   <div class="hero-glow"></div>
@@ -410,21 +426,31 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
 
 <script>
 // ═══════════════════════════════════════════
-// DATA — DaddyLive stream embed
+// DATA — DaddyLive stream embed (multi-mirror)
 // ═══════════════════════════════════════════
-// DaddyLive public schedule: https://dlhd.pk/schedule/schedule.json
-// DaddyLive stream embed: https://dlhd.pk/stream/stream-{id}.php
-// Multiple fallback folders: stream, cast, watch, plus, casting, player
 
-const DLHD = 'https://dlhd.pk';
-const SCHEDULE_URL = 'https://dlhd.pk/schedule/schedule.json';
-const PROXY = 'https://api.allorigins.win/raw?url=';
+// Mirror priority list — tried in order until one works
+const MIRRORS = [
+  { base: 'https://dlhd.so',   schedule: 'https://dlhd.so/schedule/schedule.json' },
+  { base: 'https://dlhd.pk',   schedule: 'https://dlhd.pk/schedule/schedule.json' },
+  { base: 'https://daddylives.sbs', schedule: 'https://daddylives.sbs/schedule/schedule.json' },
+  { base: 'https://daddylive.mp',   schedule: 'https://daddylive.mp/schedule/schedule.json' },
+  { base: 'https://daddylives.icu', schedule: 'https://daddylives.icu/schedule/schedule.json' },
+];
+
+const CORS_PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?url=',
+  'https://api.codetabs.com/v1/proxy?quest=',
+];
 
 // Stream folder fallbacks — try each if one fails
 const STREAM_FOLDERS = ['stream','cast','watch','plus','casting','player'];
 
+let activeMirror = MIRRORS[0]; // set on first successful fetch
+
 function streamUrl(id, folder='stream'){
-  return `${DLHD}/${folder}/stream-${id}.php`;
+  return `${activeMirror.base}/${folder}/stream-${id}.php`;
 }
 
 // ═══════════════════════════════════════════
@@ -470,22 +496,66 @@ let curStreamUrl = '';
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 // ═══════════════════════════════════════════
-// SCHEDULE FETCH
+// SCHEDULE FETCH — multi-mirror + CORS proxy + TheSportsDB fallback
 // ═══════════════════════════════════════════
+async function tryFetch(url, timeout=6000){
+  const r = await fetch(url, {signal: AbortSignal.timeout(timeout)});
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
 async function fetchSchedule(){
-  try{
-    // Try direct first
-    const r = await fetch(SCHEDULE_URL, {signal: AbortSignal.timeout(6000)});
-    const d = await r.json();
-    return d;
-  }catch{
-    // Try via CORS proxy
+  // 1. Try each mirror directly, then through each CORS proxy
+  for(const mirror of MIRRORS){
     try{
-      const r = await fetch(PROXY + encodeURIComponent(SCHEDULE_URL));
-      const d = await r.json();
+      const d = await tryFetch(mirror.schedule);
+      activeMirror = mirror;
+      console.log('Schedule OK via:', mirror.base);
       return d;
-    }catch{ return null; }
+    }catch(e){ console.warn('Direct fail:', mirror.base, e.message); }
+    for(const proxy of CORS_PROXIES){
+      try{
+        const d = await tryFetch(proxy + encodeURIComponent(mirror.schedule));
+        activeMirror = mirror;
+        console.log('Schedule OK via proxy+mirror:', mirror.base);
+        return d;
+      }catch(e){ console.warn('Proxy fail:', proxy, e.message); }
+    }
   }
+  // 2. TheSportsDB fallback (schedule only, no stream links)
+  console.warn('All DL mirrors failed — TheSportsDB fallback');
+  return fetchTheSportsDB();
+}
+
+async function fetchTheSportsDB(){
+  const today = new Date().toISOString().slice(0,10);
+  const leagues = [
+    {id:'4346',cat:'Cricket'},{id:'4423',cat:'Cricket'},
+    {id:'4328',cat:'Football'},{id:'4335',cat:'Football'},
+    {id:'4331',cat:'Football'},{id:'4334',cat:'Football'},
+    {id:'4480',cat:'Football'},{id:'4332',cat:'Football'},
+    {id:'4399',cat:'Football'},
+  ];
+  const results = {};
+  const base = 'https://www.thesportsdb.com/api/v1/json/123';
+  await Promise.allSettled(leagues.map(async ({id,cat})=>{
+    try{
+      const r = await fetch(base + '/eventsday.php?d=' + today + '&l=' + id);
+      const data = await r.json();
+      if(data && data.events){
+        if(!results['Today UK']) results['Today UK'] = {};
+        if(!results['Today UK'][cat]) results['Today UK'][cat] = [];
+        data.events.forEach(ev=>{
+          results['Today UK'][cat].push({
+            time: ev.strTime ? ev.strTime.slice(0,5) : '',
+            event: (ev.strHomeTeam||'') + ' vs ' + (ev.strAwayTeam||''),
+            channels:[], channels2:[], _noStream:true, _league:ev.strLeague,
+          });
+        });
+      }
+    }catch(e){ console.warn('TSDB fail:', id, e.message); }
+  }));
+  return Object.keys(results).length ? results : null;
 }
 
 function parseSchedule(data){
@@ -544,7 +614,9 @@ function mkMatch(ev){
   const sportIco = {cricket:'🏏',football:'⚽',tennis:'🎾',basketball:'🏀',mma:'🥊',motorsport:'🏎️',golf:'⛳',all:'📺'}[ev.sport]||'📺';
   const allChs = [...ev.channels, ...(ev.channels2||[])].slice(0,4);
 
-  const chHtml = allChs.map(ch=>`
+  const chHtml = ev._noStream
+    ? `<span style="font-size:10px;color:var(--org)">📅 Schedule only &mdash; no stream</span>`
+    : allChs.map(ch=>`
     <div class="mc-ch" onclick="event.stopPropagation();playChannel('${ch.channel_id}','${(ch.channel_name||'').replace(/'/g,"\\'")}','${(ev.event||'').replace(/'/g,"\\'")}')">
       <span>${ch.channel_name||'Stream'}</span>
     </div>`).join('');
@@ -572,7 +644,7 @@ function playBestChannel(ev){
 // ═══════════════════════════════════════════
 function mkChannel(ch){
   const logoUrl = ch.logo_url
-    ? (ch.logo_url.startsWith('http') ? ch.logo_url : `${DLHD}/${ch.logo_url}`)
+    ? (ch.logo_url.startsWith('http') ? ch.logo_url : `${activeMirror.base}/${ch.logo_url}`)
     : '';
   return `<div class="chcard" onclick="playChannel('${ch.id}','${(ch.name||'').replace(/'/g,"\\'")}','${ch.name||''}')">
     ${logoUrl
@@ -613,7 +685,14 @@ async function init(){
   if(data){
     scheduleData = data;
     allEvents = parseSchedule(data);
+    const hasStreams = allEvents.some(e=>!e._noStream);
+    if(hasStreams){
+      setSrcBanner('ok', '✓ Live streams: ' + (activeMirror ? activeMirror.base.replace('https://','') : 'mirror'));
+    } else {
+      setSrcBanner('warn','⚠ Schedule from TheSportsDB — DaddyLive mirrors offline, no streams');
+    }
   } else {
+    setSrcBanner('err','✗ No schedule available — showing popular channels only');
     // Fallback: show popular channels as events
     allEvents = POPULAR_CHANNELS.map(ch=>({
       time:'', event:ch.name, sport:ch.sport, category:ch.sport,
@@ -867,6 +946,14 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ closePlayer(); closeExt(); }
   if(e.key==='f'&&document.getElementById('pm').classList.contains('on')) goFS();
 });
+
+
+function setSrcBanner(state, msg){
+  const b = document.getElementById('srcBanner');
+  const t = document.getElementById('srcTxt');
+  b.className = state; // ok / warn / err
+  t.textContent = msg;
+}
 
 // Boot
 init();
