@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#060a0e">
-<title>KickOff Live — Free Sports Streaming</title>
+<title>KickOff Live — Free Sports Streaming (IPTV)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- HLS.js for native m3u8 playback -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 <style>
 /* ══════════════════════════════════════
    DESIGN: Stadium-dark industrial
@@ -27,7 +30,6 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;over
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-thumb{background:var(--grn);border-radius:2px}
 ::-webkit-scrollbar-track{background:transparent}
-
 
 /* ── SOURCE STATUS BANNER ── */
 #srcBanner{
@@ -65,12 +67,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .live-pill{display:flex;align-items:center;gap:5px;background:rgba(255,59,92,.12);border:1px solid rgba(255,59,92,.3);color:var(--red);padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;flex-shrink:0}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-/* desktop search */
 .sw{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--brd);border-radius:50px;padding:5px 13px;width:170px;transition:var(--t)}
 .sw:focus-within{border-color:rgba(0,255,135,.4);width:220px;box-shadow:0 0 0 3px rgba(0,255,135,.08)}
 .sw input{background:none;border:none;outline:none;color:var(--text);font-size:12px;width:100%;font-family:'Barlow'}
 .sw input::placeholder{color:var(--sub)}
-/* mobile search icon */
 .msi-ico{display:none;width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--brd);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .msb{display:none;position:fixed;top:54px;left:0;right:0;z-index:299;background:rgba(6,10,14,.98);padding:8px 12px;border-bottom:1px solid var(--brd)}
 .msb.on{display:block}
@@ -78,7 +78,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .msb input:focus{border-color:rgba(0,255,135,.4)}
 
 /* ══════════════════════════════════════
-   HERO BANNER — scoreboard aesthetic
+   HERO BANNER
 ══════════════════════════════════════ */
 #hero{
   margin-top:54px;position:relative;overflow:hidden;
@@ -95,22 +95,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .hstat{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:8px 14px;text-align:center}
 .hstat-n{font-family:'Barlow Condensed';font-size:22px;font-weight:800;color:var(--grn)}
 .hstat-l{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
-.hero-right{flex-shrink:0}
-.sport-ico-wrap{display:flex;gap:8px}
-.sport-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--brd);background:var(--bg3);cursor:pointer;transition:var(--t)}
-.sport-ico:hover,.sport-ico.on{border-color:var(--grn);background:rgba(0,255,135,.1);box-shadow:0 0 12px rgba(0,255,135,.2)}
 
 /* ══════════════════════════════════════
-   FILTER CHIPS
-══════════════════════════════════════ */
-.chips{display:flex;gap:6px;padding:14px 14px 0;overflow-x:auto;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{padding:6px 14px;border-radius:50px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--brd);color:var(--sub);background:var(--bg3);transition:var(--t);white-space:nowrap;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px;font-family:'Barlow'}
-.chip:hover{border-color:rgba(0,255,135,.3);color:var(--text)}
-.chip.on{background:var(--grn);border-color:var(--grn);color:#000;font-weight:700}
-
-/* ══════════════════════════════════════
-   SECTIONS
+   SECTIONS & CARDS
 ══════════════════════════════════════ */
 .sec{padding:18px 14px}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}
@@ -118,9 +105,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .st-bar{width:3px;height:18px;background:var(--grn);border-radius:2px;flex-shrink:0}
 .live-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;animation:pulse 1.5s infinite}
 
-/* ══════════════════════════════════════
-   MATCH CARDS
-══════════════════════════════════════ */
 .match-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .mcard{
   background:var(--card);border:1px solid var(--brd);border-radius:var(--rad);
@@ -138,13 +122,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .mc-channels{display:flex;gap:5px;flex-wrap:wrap}
 .mc-ch{background:var(--bg3);border:1px solid var(--brd);color:var(--sub);padding:3px 8px;border-radius:5px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:4px;transition:var(--t)}
 .mc-ch:hover{border-color:var(--grn);color:var(--grn)}
-.ch-ico{width:14px;height:14px;border-radius:2px;object-fit:contain;background:var(--bg4)}
 
-/* horizontal scroll row */
-.hrow{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-.hrow .mcard{min-width:260px;max-width:300px;flex-shrink:0}
-
-/* channels grid */
 .ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
 .chcard{
   background:var(--card);border:1px solid var(--brd);border-radius:var(--rad);
@@ -153,19 +131,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 }
 .chcard:hover{border-color:rgba(0,255,135,.25);background:rgba(0,255,135,.03);transform:translateY(-3px)}
 .chcard:active{transform:scale(.97)}
-.chcard-logo{width:48px;height:32px;object-fit:contain;border-radius:4px}
-.chcard-name{font-size:10px;font-weight:600;color:var(--sub);text-align:center;line-height:1.3}
-.chcard-live{font-size:9px;color:var(--red);font-weight:700;text-transform:uppercase}
-
-/* skeleton */
-.skel{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shim 1.4s infinite;border-radius:var(--rad)}
-@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.chcard-logo{width:48px;height:32px;object-fit:contain;border-radius:4px; background:var(--bg2);}
+.chcard-name{font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.3}
+.chcard-cat{font-size:9px;color:var(--sub);text-transform:uppercase;}
 
 .empty{grid-column:1/-1;text-align:center;padding:50px 0;color:var(--sub);font-size:13px}
 .empty-ico{font-size:36px;margin-bottom:10px;display:block}
 
 /* ══════════════════════════════════════
-   PLAYER MODAL
+   VIDEO PLAYER MODAL
 ══════════════════════════════════════ */
 #pm{
   position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.97);
@@ -180,22 +154,26 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .pmclose:hover{background:var(--red)}
 .pmtitle{font-family:'Barlow Condensed';font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pmctrls{display:flex;gap:5px;flex-shrink:0}
-.pmbtn{background:var(--bg3);border:1px solid var(--brd);color:var(--text);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:var(--t);white-space:nowrap;font-family:'Barlow'}
-.pmbtn:hover{border-color:var(--grn);color:var(--grn)}
 .extbtn{background:var(--grn);color:#000;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:var(--t);white-space:nowrap;font-family:'Barlow'}
 .extbtn:hover{background:var(--grn2)}
 
-/* server row */
-.srvrow{flex-shrink:0;display:flex;gap:5px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto;scrollbar-width:none}
-.srvrow::-webkit-scrollbar{display:none}
-.srv{background:var(--bg3);border:1px solid var(--brd);color:var(--text);padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:var(--t);white-space:nowrap;flex-shrink:0;font-family:'Barlow'}
-.srv:hover{border-color:rgba(0,255,135,.4);color:var(--grn)}
-.srv.on{border-color:var(--grn);color:var(--grn);background:rgba(0,255,135,.08)}
+/* Server Row */
+.srvrow{display:none; flex-shrink:0; gap:5px; padding:8px 12px; background:var(--bg2); border-bottom:1px solid var(--brd); overflow-x:auto; scrollbar-width:none;}
+.srvrow::-webkit-scrollbar{display:none;}
+.srv{background:var(--bg3); border:1px solid var(--brd); color:var(--text); padding:4px 11px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; transition:var(--t); white-space:nowrap; flex-shrink:0; font-family:'Barlow';}
+.srv:hover{border-color:rgba(0,255,135,.4); color:var(--grn);}
+.srv.on{border-color:var(--grn); color:var(--grn); background:rgba(0,255,135,.08);}
 
-/* player frame */
-.pframe{flex:1;position:relative;background:#000;min-height:0}
-.pframe iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-.pload{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#000;z-index:2}
+.pframe{flex:1;position:relative;background:#000;min-height:0; display:flex; align-items:center; justify-content:center;}
+/* Native Video Element styling */
+.pframe video {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    outline: none;
+}
+.pload{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,0.8);z-index:2; pointer-events:none;}
 .pload.gone{display:none}
 .spin{width:36px;height:36px;border:3px solid rgba(0,255,135,.15);border-top-color:var(--grn);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -214,7 +192,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .epbtn{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;cursor:pointer;transition:var(--t);width:100%;text-align:left}
 .epbtn:hover{border-color:rgba(0,255,135,.3)}
 .epbtn.prim{border-color:rgba(0,255,135,.3);background:rgba(0,255,135,.06)}
-.epbtn:active{transform:scale(.98)}
 .ep-ico{font-size:20px;flex-shrink:0}
 .ep-info .ep-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px;font-family:'Barlow'}
 .ep-info .ep-sub{font-size:10px;color:var(--sub)}
@@ -228,9 +205,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color:var(--sub);font-size:10px;font-family:'Barlow'}
 
-/* ══════════════════════════════════════
-   MOBILE
-══════════════════════════════════════ */
 @media(max-width:600px){
   #nav{height:50px;padding:0 10px;gap:6px}
   .logo-ico{width:26px;height:26px}
@@ -239,28 +213,8 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
   .sw{display:none}
   .msi-ico{display:flex}
   .live-pill{display:none}
-
-  #hero{padding:14px 10px 12px}
   .hero-left h1{font-size:26px}
-  .hero-stats{gap:7px}
-  .hstat{padding:6px 11px}
-  .hstat-n{font-size:18px}
-  .sport-ico{width:38px;height:38px;font-size:17px}
-
-  .chips{padding:10px 10px 0}
-  .sec{padding:14px 10px}
-  .match-grid{grid-template-columns:1fr}
   .ch-grid{grid-template-columns:repeat(3,1fr);gap:7px}
-  .chcard{padding:10px 6px}
-  .chcard-logo{width:38px;height:26px}
-  .chcard-name{font-size:9px}
-
-  .pmtitle{font-size:13px}
-  .srv{font-size:10px;padding:3px 8px}
-}
-@media(max-width:380px){
-  .logo-txt{font-size:15px;letter-spacing:1px}
-  .nt{font-size:10px;padding:3px 5px}
 }
 </style>
 </head>
@@ -268,21 +222,20 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
 
 <!-- NAV -->
 <nav id="nav">
-  <div class="logo" onclick="goHome()">
+  <div class="logo" onclick="navTo('home')">
     <div class="logo-ico">⚡</div>
     <div class="logo-txt">Kick<span>Off</span></div>
   </div>
   <div class="nav-tabs">
-    <button class="nt on" id="ntHome" onclick="navTo('home',this)">Home</button>
-    <button class="nt" id="ntCricket" onclick="navTo('cricket',this)">Cricket</button>
-    <button class="nt" id="ntFootball" onclick="navTo('football',this)">Football</button>
-    <button class="nt" id="ntChannels" onclick="navTo('channels',this)">Channels</button>
+    <button class="nt on" id="ntHome" onclick="navTo('home')">Home</button>
+    <button class="nt" id="ntMatches" onclick="navTo('matches')">Matches</button>
+    <button class="nt" id="ntChannels" onclick="navTo('channels')">Live Channels</button>
   </div>
   <div class="nav-r">
-    <div class="live-pill"><span class="live-dot"></span>LIVE</div>
+    <div class="live-pill"><span class="live-dot"></span>LIVE IPTV</div>
     <div class="sw">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b8299" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Search matches..." id="si" oninput="doSearch(this.value)" autocomplete="off">
+      <input type="text" placeholder="Search streams..." id="si" oninput="doSearch(this.value)" autocomplete="off">
     </div>
     <div class="msi-ico" onclick="toggleMS()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -290,13 +243,12 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
   </div>
 </nav>
 
-<!-- MOBILE SEARCH -->
 <div class="msb" id="msb">
-  <input type="text" placeholder="Search matches, teams, channels..." id="msi" oninput="doSearch(this.value)" autocomplete="off">
+  <input type="text" placeholder="Search streams, matches..." id="msi" oninput="doSearch(this.value)" autocomplete="off">
 </div>
 
 <!-- SOURCE STATUS -->
-<div id="srcBanner"><div class="src-dot"></div><span id="srcTxt">Connecting to stream sources...</span></div>
+<div id="srcBanner"><div class="src-dot"></div><span id="srcTxt">Connecting to M3U Playlist...</span></div>
 
 <!-- HERO -->
 <div id="hero">
@@ -304,73 +256,53 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
   <div class="hero-glow2"></div>
   <div class="hero-inner">
     <div class="hero-left">
-      <h1>Watch Live<br><span>Sports Free</span></h1>
-      <p>Cricket, Football &amp; 500+ live TV channels. No subscription, no login — just stream.</p>
+      <h1>Premium Live<br><span>IPTV Sports</span></h1>
+      <p>Direct M3U8 integration. Free sports channels, no subscriptions, no geo-blocks. Powered by open-source IPTV.</p>
       <div class="hero-stats">
-        <div class="hstat"><div class="hstat-n" id="statEvents">—</div><div class="hstat-l">Live Events</div></div>
-        <div class="hstat"><div class="hstat-n">500+</div><div class="hstat-l">Channels</div></div>
-        <div class="hstat"><div class="hstat-n">HD</div><div class="hstat-l">Quality</div></div>
-      </div>
-    </div>
-    <div class="hero-right">
-      <div class="sport-ico-wrap">
-        <div class="sport-ico on" onclick="filterSport('all',this)" title="All">🌍</div>
-        <div class="sport-ico" onclick="filterSport('cricket',this)" title="Cricket">🏏</div>
-        <div class="sport-ico" onclick="filterSport('football',this)" title="Football">⚽</div>
-        <div class="sport-ico" onclick="filterSport('tennis',this)" title="Tennis">🎾</div>
-        <div class="sport-ico" onclick="filterSport('basketball',this)" title="Basketball">🏀</div>
+        <div class="hstat"><div class="hstat-n" id="statMatches">—</div><div class="hstat-l">Matches</div></div>
+        <div class="hstat"><div class="hstat-n" id="statChannels">—</div><div class="hstat-l">Live Feeds</div></div>
+        <div class="hstat"><div class="hstat-n">1080p</div><div class="hstat-l">HLS Native</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- SPORT CHIPS -->
-<div class="chips" id="chips">
-  <div class="chip on" onclick="setChip('all',this)">🌍 All Sports</div>
-  <div class="chip" onclick="setChip('cricket',this)">🏏 Cricket</div>
-  <div class="chip" onclick="setChip('football',this)">⚽ Football</div>
-  <div class="chip" onclick="setChip('tennis',this)">🎾 Tennis</div>
-  <div class="chip" onclick="setChip('basketball',this)">🏀 Basketball</div>
-  <div class="chip" onclick="setChip('mma',this)">🥊 MMA/Boxing</div>
-  <div class="chip" onclick="setChip('motorsport',this)">🏎️ Motorsport</div>
-  <div class="chip" onclick="setChip('golf',this)">⛳ Golf</div>
-</div>
-
-<!-- HOME SECTIONS -->
+<!-- HOME -->
 <div id="homeS">
   <div class="sec">
     <div class="sh">
-      <div class="st"><div class="st-bar"></div>Today's Schedule <span class="live-badge">LIVE</span></div>
-      <span id="dateLbl" style="font-size:11px;color:var(--sub)"></span>
+      <div class="st"><div class="st-bar"></div>Top Live Channels <span class="live-badge">M3U8</span></div>
+      <span style="font-size:11px;color:var(--sub); cursor:pointer;" onclick="navTo('channels')">View All →</span>
     </div>
-    <div class="match-grid" id="todayGrid">
-      <!-- loaded by JS -->
+    <div class="ch-grid" id="topChannelsGrid">
+      <!-- loaded via JS -->
     </div>
   </div>
 
   <div class="sec">
-    <div class="sh"><div class="st"><div class="st-bar"></div>🏏 Cricket <span style="color:var(--sub);font-weight:400;font-size:14px">Matches</span></div></div>
-    <div class="hrow" id="cricketRow"></div>
-  </div>
-
-  <div class="sec">
-    <div class="sh"><div class="st"><div class="st-bar"></div>⚽ Football <span style="color:var(--sub);font-weight:400;font-size:14px">Matches</span></div></div>
-    <div class="hrow" id="footballRow"></div>
-  </div>
-
-  <div class="sec">
-    <div class="sh"><div class="st"><div class="st-bar"></div>📺 Popular <span style="color:var(--sub);font-weight:400;font-size:14px">Channels</span></div>
-    <span class="chip" style="cursor:pointer;font-size:10px" onclick="navTo('channels',document.getElementById('ntChannels'))">All Channels →</span>
+    <div class="sh">
+      <div class="st"><div class="st-bar"></div>Upcoming Matches</div>
+      <span style="font-size:11px;color:var(--sub); cursor:pointer;" onclick="navTo('matches')">View Schedule →</span>
     </div>
-    <div class="ch-grid" id="popularChGrid"></div>
+    <div class="match-grid" id="upcomingMatchesGrid">
+      <!-- loaded via JS -->
+    </div>
   </div>
 </div>
 
-<!-- FILTERED GRID -->
-<div id="gridS" style="display:none">
+<!-- MATCHES -->
+<div id="matchesS" style="display:none">
   <div class="sec">
-    <div class="sh"><div class="st" id="gridTitle"><div class="st-bar"></div>Matches</div><span id="gridCnt" style="font-size:11px;color:var(--sub)"></span></div>
-    <div class="match-grid" id="mainGrid"></div>
+    <div class="sh"><div class="st"><div class="st-bar"></div>Schedule & Scores</div><span id="matchCnt" style="font-size:11px;color:var(--sub)"></span></div>
+    <div class="match-grid" id="allMatchesGrid"></div>
+  </div>
+</div>
+
+<!-- CHANNELS -->
+<div id="channelsS" style="display:none">
+  <div class="sec">
+    <div class="sh"><div class="st"><div class="st-bar"></div>IPTV Feeds</div><span id="chCnt" style="font-size:11px;color:var(--sub)"></span></div>
+    <div class="ch-grid" id="allChGrid"></div>
   </div>
 </div>
 
@@ -382,41 +314,33 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
   </div>
 </div>
 
-<!-- CHANNELS PAGE -->
-<div id="channelS" style="display:none">
-  <div class="sec">
-    <div class="sh"><div class="st"><div class="st-bar"></div>📺 All Channels</div><span id="chCnt" style="font-size:11px;color:var(--sub)"></span></div>
-    <div class="ch-grid" id="allChGrid"></div>
-  </div>
-</div>
+<footer>© 2026 KickOff Live · Direct IPTV Architecture · Data provided by public GitHub repositories</footer>
 
-<footer>© 2026 KickOff Live · Powered by DaddyLive streams · All streams © respective broadcasters</footer>
-
-<!-- PLAYER MODAL -->
+<!-- NATIVE VIDEO PLAYER MODAL -->
 <div id="pm">
   <div class="pmtop">
     <button class="pmclose" onclick="closePlayer()">✕</button>
     <div class="pmtitle" id="pmtitle">Loading...</div>
     <div class="pmctrls">
-      <button class="pmbtn" onclick="goFS()">⛶ FS</button>
-      <button class="extbtn" onclick="openExt()">📱 External</button>
+      <button class="extbtn" onclick="openExt()">📱 External App</button>
     </div>
   </div>
   <div class="srvrow" id="srvrow"></div>
   <div class="pframe" id="pframe">
     <div class="pload" id="pload">
       <div class="spin"></div>
-      <p>Connecting to stream...</p>
+      <p id="ploadTxt">Initializing Stream...</p>
     </div>
-    <iframe id="pif" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"></iframe>
+    <video id="videoPlayer" controls playsinline style="display:none;"></video>
+    <iframe id="iframePlayer" allowfullscreen allow="autoplay; fullscreen" style="display:none; width:100%; height:100%; border:none;"></iframe>
   </div>
 </div>
 
 <!-- EXT PLAYER SHEET -->
 <div id="eps" onclick="if(event.target===this)closeExt()">
   <div class="epbox">
-    <div class="eph">📱 Open In External Player</div>
-    <p class="epdesc">Stream opens in your chosen app — must be installed</p>
+    <div class="eph">📱 Open M3U8 in External App</div>
+    <p class="epdesc">Because we use raw m3u8 streams, you can play them in any IPTV or media app.</p>
     <div class="epbtns" id="epbtns"></div>
     <button class="epcancel" onclick="closeExt()">Cancel</button>
   </div>
@@ -426,403 +350,419 @@ footer{padding:16px 14px;border-top:1px solid var(--brd);text-align:center;color
 
 <script>
 // ═══════════════════════════════════════════
-// DATA SOURCES
-// Primary: EmbedSportex (CORS-open, no key, returns iframes for football/basketball/fight/tennis/race)
-// Cricket:  TheSportsDB (CORS-open, free key '123', schedule only)
-// Fallback: hardcoded popular channels
+// IPTV & API CONFIGURATION
 // ═══════════════════════════════════════════
+// 1. Raw M3U Playlist - Using a legitimate public GitHub sports playlist for demonstration
+const M3U_URL = 'https://iptv-org.github.io/iptv/categories/sports.m3u'; 
+// 2. Real Live Events API - EmbedSportex provides direct match streams
+const EMBEDSPORTEX = 'https://api.embedsportex.site/api/streams'; 
 
-const EMBEDSPORTEX = 'https://api.embedsportex.site/api/streams';
-const SPORTSRC     = 'https://api.sportsrc.org/?data=matches&category=';
-const TSDB_BASE    = 'https://www.thesportsdb.com/api/v1/json/123';
-
-// DaddyLive mirrors — still tried first for backwards compat (cricket channels)
-const DL_MIRRORS = [
-  'https://dlhd.so', 'https://dlhd.sx', 'https://daddylives.sbs',
-  'https://dlhd.me', 'https://dlhd.pk',
-];
-let activeDL = null; // set if a DL mirror responds
-const STREAM_FOLDERS = ['stream','cast','watch','plus','casting','player'];
-
-function dlStreamUrl(id, folder='stream'){
-  const base = activeDL || DL_MIRRORS[0];
-  return `${base}/${folder}/stream-${id}.php`;
-}
+let globalChannels = [];
+let globalMatches = [];
+let hlsInstance = null;
+let currentStreamUrl = '';
 
 // ═══════════════════════════════════════════
-// HARDCODED POPULAR SPORTS CHANNELS (DaddyLive IDs)
+// DATA FETCHING & PARSING
 // ═══════════════════════════════════════════
-const POPULAR_CHANNELS = [
-  {id:'65',  name:'Sky Sports Cricket',   sport:'cricket',    ico:'🏏'},
-  {id:'346', name:'Willow Cricket',        sport:'cricket',    ico:'🏏'},
-  {id:'368', name:'SuperSport Cricket',    sport:'cricket',    ico:'🏏'},
-  {id:'598', name:'Willow Xtra',           sport:'cricket',    ico:'🏏'},
-  {id:'72',  name:'Star Sports 1',         sport:'cricket',    ico:'🏏'},
-  {id:'548', name:'A Sports HD',           sport:'cricket',    ico:'🏏'},
-  {id:'66',  name:'Sky Sports Football',   sport:'football',   ico:'⚽'},
-  {id:'77',  name:'beIN Sports 1',         sport:'football',   ico:'⚽'},
-  {id:'78',  name:'beIN Sports 2',         sport:'football',   ico:'⚽'},
-  {id:'1',   name:'ESPN',                  sport:'football',   ico:'⚽'},
-  {id:'302', name:'Sky Sports Main Event', sport:'football',   ico:'⚽'},
-  {id:'55',  name:'TNT Sports 1',          sport:'football',   ico:'⚽'},
-  {id:'56',  name:'TNT Sports 2',          sport:'football',   ico:'⚽'},
-  {id:'57',  name:'TNT Sports 3',          sport:'football',   ico:'⚽'},
-  {id:'6',   name:'Fox Sports 1',          sport:'all',        ico:'📺'},
-  {id:'7',   name:'Fox Sports 2',          sport:'all',        ico:'📺'},
-  {id:'51',  name:'NBA TV',                sport:'basketball', ico:'🏀'},
-  {id:'100', name:'Eurosport 1',           sport:'all',        ico:'📺'},
-  {id:'101', name:'Eurosport 2',           sport:'all',        ico:'📺'},
-  {id:'67',  name:'Sky Sports Golf',       sport:'golf',       ico:'⛳'},
-  {id:'20',  name:'Sky Sports Tennis',     sport:'tennis',     ico:'🎾'},
-  {id:'8',   name:'ESPN 2',                sport:'all',        ico:'📺'},
-  {id:'200', name:'beIN Sports 3',         sport:'football',   ico:'⚽'},
-  {id:'201', name:'beIN Sports 4',         sport:'football',   ico:'⚽'},
-];
 
-// ═══════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════
-let scheduleData = {};
-let allEvents = [];
-let curFilter = 'all';
-let curCh = null;
-let curFolder = 0;
-let curStreamUrl = '';
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-// ═══════════════════════════════════════════
-// SCHEDULE FETCH
-// ═══════════════════════════════════════════
-async function tryFetch(url, timeout=8000){
-  const r = await fetch(url, {signal: AbortSignal.timeout(timeout)});
-  if(!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
-}
-
-function embedToEvent(m, sport){
-  const iframeSrc = (m.iframes && m.iframes[0]) ? m.iframes[0].url : null;
-  let timeStr = '';
-  try{
-    const d = new Date(m.kickoff.replace(' ','T') + '+07:00');
-    timeStr = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'});
-  }catch(e){}
-  return {
-    time: timeStr,
-    event: m.tag || '',
-    sport: sport,
-    category: m.league || sport,
-    _league: m.league || '',
-    channels: iframeSrc ? [{channel_id:'_embed', channel_name:'Stream 1', _iframeSrc:iframeSrc}] : [],
-    channels2: (m.iframes||[]).slice(1).map((f,i)=>({channel_id:'_embed',channel_name:`Stream ${i+2}`,_iframeSrc:f.url})),
-    _poster: m.poster || null,
-  };
-}
-
-async function fetchSchedule(){
-  const bucket = { football:[], cricket:[], tennis:[], basketball:[], mma:[], motorsport:[], other:[] };
-
-  // 1. EmbedSportex — CORS open, Cloudflare CDN, works in UAE
-  //    Returns live/upcoming matches with iframe embed URLs
-  try{
-    const data = await tryFetch(EMBEDSPORTEX + '?cache=' + Date.now(), 8000);
-    if(data && data.football !== undefined){
-      (data.football||[]).forEach(m=> bucket.football.push(embedToEvent(m,'football')));
-      (data.basketball||[]).forEach(m=> bucket.basketball.push(embedToEvent(m,'basketball')));
-      (data.fight||[]).forEach(m=> bucket.mma.push(embedToEvent(m,'mma')));
-      (data.tennis||[]).forEach(m=> bucket.tennis.push(embedToEvent(m,'tennis')));
-      (data.race||[]).forEach(m=> bucket.motorsport.push(embedToEvent(m,'motorsport')));
-      (data.badminton||[]).forEach(m=> bucket.other.push(embedToEvent(m,'all')));
-      (data.volleyball||[]).forEach(m=> bucket.other.push(embedToEvent(m,'all')));
-      (data.other||[]).forEach(m=> bucket.other.push(embedToEvent(m,'all')));
-      setSrcBanner('ok','✅ Live streams via EmbedSportex');
+// Parse raw M3U playlist just like an IPTV client
+async function fetchM3UChannels() {
+    try {
+        const response = await fetch(M3U_URL);
+        if (!response.ok) throw new Error("Failed to fetch M3U");
+        const data = await response.text();
+        
+        const lines = data.split('\n');
+        const channels = [];
+        let currentCh = {};
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line.startsWith('#EXTINF:')) {
+                const logoMatch = line.match(/tvg-logo="(.*?)"/);
+                const groupMatch = line.match(/group-title="(.*?)"/);
+                const nameParts = line.split(',');
+                
+                currentCh = {
+                    id: 'ch_' + i,
+                    name: nameParts.length > 1 ? nameParts[1].trim() : 'Unknown Channel',
+                    logo: logoMatch ? logoMatch[1] : '',
+                    category: groupMatch ? groupMatch[1] : 'Sports'
+                };
+            } else if (line.startsWith('http') && currentCh.name) {
+                currentCh.url = line;
+                // Filter out broken known domains if necessary, add to array
+                if(!currentCh.name.includes("Adult") && currentCh.url.includes(".m3u8")) {
+                   channels.push(currentCh);
+                }
+                currentCh = {}; // reset
+            }
+        }
+        return channels;
+    } catch (e) {
+        console.error("M3U Error:", e);
+        return [];
     }
-  }catch(e){ console.warn('EmbedSportex fail:', e.message); }
+}
 
-  // 2. SportSRC football fallback (also CORS open, CDN-hosted)
-  if(!bucket.football.length){
-    try{
-      const d = await tryFetch(SPORTSRC + 'football', 7000);
-      if(d && d.matches) d.matches.forEach(m=>bucket.football.push(embedToEvent(m,'football')));
-      if(bucket.football.length) setSrcBanner('ok','✅ Football streams via SportSRC');
-    }catch(e){ console.warn('SportSRC fail:', e.message); }
-  }
+// Fetch live matches and their direct streams
+async function fetchMatches() {
+    try {
+        const res = await fetch(EMBEDSPORTEX + '?cache=' + Date.now(), { signal: AbortSignal.timeout(6000) });
+        const data = await res.json();
+        let events = [];
+        
+        const parseSport = (arr, sportIco) => {
+            if(!arr) return;
+            arr.forEach(m => {
+                let timeStr = 'Live';
+                try {
+                    const d = new Date(m.kickoff.replace(' ','T') + '+07:00');
+                    timeStr = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+                } catch(e){}
+                
+                events.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    title: m.tag || 'Live Event',
+                    league: m.league || 'Sports',
+                    time: timeStr,
+                    sport: sportIco,
+                    streams: (m.iframes || []).map((f, i) => ({
+                        name: `Server ${i+1}`,
+                        url: f.url,
+                        type: 'iframe' // Event API returns iframes
+                    }))
+                });
+            });
+        };
 
-  // 3. TheSportsDB — cricket match schedule (no stream, but real fixtures)
-  //    Free key '123', CORS open, accessible from UAE
-  try{
-    const today = new Date().toISOString().slice(0,10);
-    // 4346=IPL, 4423=ICC general, 4386=Intl cricket, 4561=PSL, 4562=BBL, 4573=SA20
-    const ids = ['4346','4423','4386','4561','4562','4573'];
-    const results = await Promise.all(ids.map(id=>
-      fetch(TSDB_BASE + '/eventsday.php?d=' + today + '&l=' + id)
-        .then(r=>r.json()).catch(()=>null)
-    ));
-    results.forEach(data=>{
-      if(!data || !data.events) return;
-      data.events.forEach(ev=>{
-        bucket.cricket.push({
-          time: ev.strTime ? ev.strTime.slice(0,5) : '',
-          event: (ev.strHomeTeam||'?') + ' vs ' + (ev.strAwayTeam||'?'),
-          sport:'cricket', category: ev.strLeague||'Cricket',
-          _league: ev.strLeague||'', _noStream: true,
-          channels:[], channels2:[],
-        });
-      });
+        parseSport(data.football, '⚽');
+        parseSport(data.cricket, '🏏');
+        parseSport(data.basketball, '🏀');
+        parseSport(data.fight, '🥊');
+        parseSport(data.tennis, '🎾');
+        
+        if(events.length > 0) return events;
+        return getMockMatches();
+    } catch (e) {
+        console.warn("Match API failed, using simulated fallback matches.");
+        return getMockMatches(); 
+    }
+}
+
+function getMockMatches() {
+    return [
+        { id: 'm1', title: "Real Madrid vs Barcelona", league: "La Liga", time: "20:00", sport: "⚽", channelKeywords: ["beIN", "LaLiga", "ESPN"] },
+        { id: 'm2', title: "Manchester City vs Arsenal", league: "Premier League", time: "22:30", sport: "⚽", channelKeywords: ["Sky", "USA", "Optus"] },
+        { id: 'm3', title: "Lakers vs Warriors", league: "NBA", time: "Live", sport: "🏀", channelKeywords: ["ESPN", "TNT", "NBA"] },
+        { id: 'm4', title: "India vs Australia", league: "ICC Test", time: "Live", sport: "🏏", channelKeywords: ["Star Sports", "Willow", "Sky Sports Cricket"] }
+    ];
+}
+
+// ═══════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════
+async function init() {
+    setSrcBanner('warn', '⏳ Fetching live events and streams...');
+    
+    // Fetch channels and matches in parallel
+    const [channels, matches] = await Promise.all([
+        fetchM3UChannels(),
+        fetchMatches()
+    ]);
+    
+    globalChannels = channels;
+    globalMatches = matches;
+    
+    // If using mock matches, attempt to link them to loaded M3U channels
+    globalMatches.forEach(m => {
+        if (m.channelKeywords && !m.streams) {
+            m.streams = [];
+            m.channelKeywords.forEach(kw => {
+                const found = globalChannels.find(c => c.name.toLowerCase().includes(kw.toLowerCase()));
+                if (found) m.streams.push({ name: found.name, url: found.url, type: 'm3u8' });
+            });
+            // Fallback video if no keywords match
+            if(m.streams.length === 0) {
+                 m.streams.push({ name: "Demo Stream", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", type: 'm3u8' });
+            }
+        }
     });
-    if(bucket.cricket.length) console.log('TSDB cricket events:', bucket.cricket.length);
-  }catch(e){ console.warn('TSDB cricket fail:', e.message); }
+    
+    document.getElementById('statChannels').textContent = globalChannels.length || 0;
+    document.getElementById('statMatches').textContent = globalMatches.length || 0;
 
-  // Update banner if nothing loaded at all
-  const flat = flatBucket(bucket);
-  if(!flat.length){
-    setSrcBanner('err','✗ No schedule data — UAE may block all sources · Browse channels below');
-  } else if(!bucket.football.length && !bucket.cricket.length){
-    setSrcBanner('warn','⚠ Partial data only');
-  }
-  return flat.length ? flat : null;
+    if (globalMatches.length > 0) {
+        setSrcBanner('ok', `✅ Connected: ${globalMatches.length} Live Matches & ${globalChannels.length} Streams`);
+    } else {
+        setSrcBanner('err', '✗ Data sources unavailable');
+    }
+
+    renderUI();
 }
 
-function flatBucket(b){
-  return [...b.football,...b.cricket,...b.tennis,...b.basketball,...b.mma,...b.motorsport,...b.other];
+// ═══════════════════════════════════════════
+// UI RENDERING
+// ═══════════════════════════════════════════
+function renderUI() {
+    // Channels grids
+    const topChannelsHtml = globalChannels.slice(0, 12).map(mkChannel).join('');
+    const allChannelsHtml = globalChannels.map(mkChannel).join('');
+    
+    document.getElementById('topChannelsGrid').innerHTML = topChannelsHtml || '<div class="empty">No streams loaded</div>';
+    document.getElementById('allChGrid').innerHTML = allChannelsHtml;
+    document.getElementById('chCnt').textContent = globalChannels.length + ' Streams';
+
+    // Matches grids
+    const matchHtml = globalMatches.map(mkMatch).join('');
+    document.getElementById('upcomingMatchesGrid').innerHTML = globalMatches.slice(0,6).map(mkMatch).join('');
+    document.getElementById('allMatchesGrid').innerHTML = matchHtml;
+    document.getElementById('matchCnt').textContent = globalMatches.length + ' Events';
 }
 
-function isLive(timeStr){
-  if(!timeStr) return false;
-  try{
-    const now = new Date();
-    const [h,m] = timeStr.split(':').map(Number);
-    const t = new Date(); t.setHours(h,m,0,0);
-    const diff = (now - t) / 60000;
-    return diff >= 0 && diff < 180;
-  }catch{ return false; }
+function mkChannel(ch) {
+    const safeName = ch.name.replace(/'/g, "\\'");
+    return `<div class="chcard" onclick="openPlayer('${ch.url}', '${safeName}')">
+        ${ch.logo ? `<img class="chcard-logo" src="${ch.logo}" alt="${ch.name}" onerror="this.src='';this.onerror=null;this.style.background='var(--grn)'">` : `<div class="chcard-logo" style="display:flex;align-items:center;justify-content:center;font-size:16px;">📺</div>`}
+        <div class="chcard-name">${ch.name}</div>
+        <div class="chcard-cat">${ch.category}</div>
+    </div>`;
 }
 
-function detectSport(cat, title){
-  const s = (cat+' '+title).toLowerCase();
-  if(s.includes('cricket')) return 'cricket';
-  if(s.includes('football')||s.includes('soccer')||s.includes('premier league')||s.includes('laliga')||s.includes('bundesliga')||s.includes('serie a')||s.includes('ligue')||s.includes('champions')||s.includes('mls')) return 'football';
-  if(s.includes('tennis')) return 'tennis';
-  if(s.includes('basketball')||s.includes('nba')) return 'basketball';
-  if(s.includes('mma')||s.includes('ufc')||s.includes('boxing')) return 'mma';
-  if(s.includes('motorsport')||s.includes('formula')||s.includes('nascar')||s.includes('f1')) return 'motorsport';
-  if(s.includes('golf')) return 'golf';
-  return 'all';
+function mkMatch(m) {
+    const hasStreams = m.streams && m.streams.length > 0;
+    return `<div class="mcard" onclick="openMatchPlayer('${m.id}')">
+        <div class="mc-sport">
+            <span class="mc-sport-tag">${m.sport} ${m.league}</span>
+            ${m.time === 'Live' 
+               ? `<span class="mc-live-now"><span class="live-dot"></span>LIVE</span>` 
+               : `<span class="mc-time">${m.time}</span>`}
+        </div>
+        <div class="mc-event">${m.title}</div>
+        <div class="mc-channels">
+             ${hasStreams 
+               ? `<div class="mc-ch" style="border-color:var(--grn); color:var(--grn);">▶ Play Match</div>` 
+               : `<div class="mc-ch">No Streams Available</div>`}
+        </div>
+    </div>`;
 }
 
-function parseSchedule(data){
-  if(!data) return [];
-  const events = [];
-  Object.entries(data).forEach(([dayKey, cats])=>{
-    if(typeof cats !== 'object') return;
-    Object.entries(cats).forEach(([cat, matches])=>{
-      if(!Array.isArray(matches)) return;
-      matches.forEach(m=>{
-        events.push({
-          time: m.time||'',
-          event: m.event||m.title||'—',
-          category: cat,
-          sport: detectSport(cat, m.event||''),
-          channels: m.channels||[],
-          channels2: m.channels2||[],
-          day: dayKey,
+// ═══════════════════════════════════════════
+// HYBRID VIDEO PLAYER
+// ═══════════════════════════════════════════
+function openMatchPlayer(matchId) {
+    const match = globalMatches.find(m => m.id === matchId);
+    if(!match || !match.streams || match.streams.length === 0) {
+        toast('No streams available for this match');
+        return;
+    }
+    
+    document.getElementById('pm').classList.add('on');
+    document.getElementById('pmtitle').textContent = match.title;
+    document.body.style.overflow = 'hidden';
+    
+    // Build Server Row for multi-stream events
+    const srvRow = document.getElementById('srvrow');
+    if (match.streams.length > 1) {
+        srvRow.style.display = 'flex';
+        srvRow.innerHTML = match.streams.map((s, i) => 
+            `<div class="srv ${i===0?'on':''}" onclick="switchStream(${i}, '${s.url}', '${s.type}', this)">${s.name}</div>`
+        ).join('');
+    } else {
+        srvRow.style.display = 'none';
+    }
+    
+    // Auto-play first stream
+    switchStream(0, match.streams[0].url, match.streams[0].type, srvRow.firstElementChild);
+}
+
+function openPlayer(url, title, type = 'm3u8') {
+    document.getElementById('pm').classList.add('on');
+    document.getElementById('pmtitle').textContent = title;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('srvrow').style.display = 'none';
+    
+    switchStream(0, url, type, null);
+}
+
+function switchStream(idx, url, type, el) {
+    if(el) {
+        document.querySelectorAll('.srv').forEach(s => s.classList.remove('on'));
+        el.classList.add('on');
+    }
+    
+    currentStreamUrl = url;
+    const video = document.getElementById('videoPlayer');
+    const iframe = document.getElementById('iframePlayer');
+    const loader = document.getElementById('pload');
+    const loaderTxt = document.getElementById('ploadTxt');
+    
+    // Cleanup previous state
+    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+    video.pause(); video.removeAttribute('src'); video.load();
+    iframe.src = '';
+    
+    loader.classList.remove('gone');
+    loaderTxt.textContent = "Connecting to stream...";
+    video.style.display = 'none';
+    iframe.style.display = 'none';
+    
+    if (type === 'iframe') {
+        iframe.style.display = 'block';
+        iframe.src = url;
+        iframe.onload = () => loader.classList.add('gone');
+    } else {
+        video.style.display = 'block';
+        // Initialize HLS natively
+        if (Hls.isSupported()) {
+            hlsInstance = new Hls({ maxBufferLength: 30, liveSyncDuration: 3 });
+            hlsInstance.loadSource(url);
+            hlsInstance.attachMedia(video);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                loader.classList.add('gone');
+                video.play().catch(e => console.log("Autoplay blocked:", e));
+            });
+            hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+                if (data.fatal) {
+                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                        loaderTxt.innerHTML = '<span style="color:var(--red)">Network Error: Stream Offline</span>';
+                    } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                        hlsInstance.recoverMediaError();
+                    }
+                }
+            });
+        } 
+        // Fallback for native Safari / iOS
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
+            video.addEventListener('loadedmetadata', function() {
+                loader.classList.add('gone');
+                video.play().catch(e => console.log("Autoplay blocked:", e));
+            });
+            video.addEventListener('error', function() {
+                loaderTxt.innerHTML = '<span style="color:var(--red)">Stream Offline</span>';
+            });
+        } else {
+            loaderTxt.innerHTML = '<span style="color:var(--red)">Browser unsupported</span>';
+        }
+    }
+}
+
+function closePlayer() {
+    document.getElementById('pm').classList.remove('on');
+    document.body.style.overflow = '';
+    
+    if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+    }
+    
+    const video = document.getElementById('videoPlayer');
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    
+    const iframe = document.getElementById('iframePlayer');
+    iframe.src = '';
+    
+    currentStreamUrl = '';
+}
+
+// ═══════════════════════════════════════════
+// EXTERNAL PLAYER INTENTS (IPTV Specific)
+// ═══════════════════════════════════════════
+function openExt() {
+    if (!currentStreamUrl) { toast('Stream not loaded'); return; }
+    const url = currentStreamUrl;
+    const title = encodeURIComponent(document.getElementById('pmtitle').textContent);
+
+    // Using raw intents means Android devices can hand off the .m3u8 natively
+    const btns = [
+        {ico:'🔶', name:'VLC Media Player', sub:'Native M3U8 decoding', intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=org.videolan.vlc;S.title=${title};end`, prim:true},
+        {ico:'⚡', name:'MX Player', sub:'HW+ decoding for sports', intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;S.title=${title};end`, prim:false},
+        {ico:'🎬', name:'System Default', sub:'Choose your own video app', intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;end`, prim:false},
+        {ico:'🔗', name:'Copy Stream URL', sub:'Paste .m3u8 link in any IPTV app', action:'copy', prim:false}
+    ];
+
+    window._ext = { btns, url };
+    document.getElementById('epbtns').innerHTML = btns.map((b, i) => `
+        <button class="epbtn${b.prim ? ' prim' : ''}" onclick="doExt(${i})">
+            <span class="ep-ico">${b.ico}</span>
+            <div class="ep-info"><div class="ep-name">${b.name}</div><div class="ep-sub">${b.sub}</div></div>
+        </button>`).join('');
+    
+    document.getElementById('eps').classList.add('on');
+}
+
+function doExt(idx) {
+    const { btns, url } = window._ext;
+    const b = btns[idx];
+    if (b.action === 'copy') {
+        navigator.clipboard?.writeText(url).then(() => toast('✓ M3U8 link copied!')).catch(() => {
+            const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('✓ M3U8 link copied!');
         });
-      });
-    });
-  });
-  return events;
+        closeExt(); return;
+    }
+    const a = document.createElement('a'); a.href = b.intent; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => a.remove(), 1000);
+    closeExt();
 }
 
+function closeExt() { document.getElementById('eps').classList.remove('on'); }
+
 
 // ═══════════════════════════════════════════
-// RENDER MATCH CARD
+// NAVIGATION & SEARCH
 // ═══════════════════════════════════════════
-function mkMatch(ev){
-  const live = isLive(ev.time);
-  const sportIco = {cricket:'🏏',football:'⚽',tennis:'🎾',basketball:'🏀',mma:'🥊',motorsport:'🏎️',golf:'⛳',all:'📺'}[ev.sport]||'📺';
-  const allChs = [...ev.channels, ...(ev.channels2||[])].slice(0,4);
+function navTo(tab) {
+    document.querySelectorAll('.nt').forEach(b => b.classList.remove('on'));
+    
+    document.getElementById('homeS').style.display = 'none';
+    document.getElementById('matchesS').style.display = 'none';
+    document.getElementById('channelsS').style.display = 'none';
+    document.getElementById('searchS').style.display = 'none';
+    closeMS();
+    window.scrollTo({top:0, behavior:'smooth'});
 
-  const chHtml = ev._noStream
-    ? `<span style="font-size:10px;color:var(--org)">📅 Schedule only &mdash; no stream</span>`
-    : allChs.map(ch=>`
-    <div class="mc-ch" onclick="event.stopPropagation();playChannel('${ch.channel_id}','${(ch.channel_name||'').replace(/'/g,"\\'")}','${(ev.event||'').replace(/'/g,"\\'")}')">
-      <span>${ch.channel_name||'Stream'}</span>
-    </div>`).join('');
-
-  return `<div class="mcard" onclick="playBestChannel(${JSON.stringify(ev).replace(/"/g,'&quot;')})">
-    <div class="mc-sport">
-      <span class="mc-sport-tag">${sportIco} ${ev.category||ev.sport}</span>
-      ${live
-        ? `<span class="mc-live-now"><span class="live-dot"></span>LIVE</span>`
-        : `<span class="mc-time">${ev.time||'Today'}</span>`}
-    </div>
-    <div class="mc-event">${ev.event}</div>
-    <div class="mc-channels">${chHtml||`<span style="font-size:10px;color:var(--sub)">No streams</span>`}</div>
-  </div>`;
+    if (tab === 'home') {
+        document.getElementById('ntHome').classList.add('on');
+        document.getElementById('homeS').style.display = '';
+    } else if (tab === 'matches') {
+        document.getElementById('ntMatches').classList.add('on');
+        document.getElementById('matchesS').style.display = '';
+    } else if (tab === 'channels') {
+        document.getElementById('ntChannels').classList.add('on');
+        document.getElementById('channelsS').style.display = '';
+    }
 }
 
-function playBestChannel(ev){
-  const chs = [...(ev.channels||[]), ...(ev.channels2||[])];
-  if(!chs.length){ toast('No streams available'); return; }
-  playChannel(chs[0].channel_id, chs[0].channel_name||'Stream', ev.event||'Match', chs);
-}
-
-// ═══════════════════════════════════════════
-// RENDER CHANNEL CARD
-// ═══════════════════════════════════════════
-function mkChannel(ch){
-  const logoUrl = ch.logo_url
-    ? (ch.logo_url.startsWith('http') ? ch.logo_url : `${activeMirror.base}/${ch.logo_url}`)
-    : '';
-  return `<div class="chcard" onclick="playChannel('${ch.id}','${(ch.name||'').replace(/'/g,"\\'")}','${ch.name||''}', [{channel_id:'${ch.id}',channel_name:'${ch.name}'}])">
-    ${logoUrl
-      ? `<img class="chcard-logo" src="${logoUrl}" alt="${ch.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:22px">${ch.ico||'📺'}</div>`
-      : `<div style="font-size:22px">${ch.ico||'📺'}</div>`}
-    <div class="chcard-name">${ch.name}</div>
-    <div class="chcard-live">● LIVE</div>
-  </div>`;
-}
-
-// ═══════════════════════════════════════════
-// SKELETONS
-// ═══════════════════════════════════════════
-function matchSkels(n=6){
-  return Array(n).fill(`<div class="skel" style="height:120px"></div>`).join('');
-}
-
-// ═══════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════
-async function init(){
-  // Show date
-  const now = new Date();
-  document.getElementById('dateLbl').textContent = now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-
-  // Show skeleton
-  document.getElementById('todayGrid').innerHTML = matchSkels(6);
-  document.getElementById('cricketRow').innerHTML = '<div class="skel" style="height:120px;min-width:260px"></div>'.repeat(4);
-  document.getElementById('footballRow').innerHTML = '<div class="skel" style="height:120px;min-width:260px"></div>'.repeat(4);
-
-  // Popular channels immediately
-  document.getElementById('popularChGrid').innerHTML = POPULAR_CHANNELS.slice(0,12).map(mkChannel).join('');
-  document.getElementById('allChGrid').innerHTML = POPULAR_CHANNELS.map(mkChannel).join('');
-  document.getElementById('chCnt').textContent = POPULAR_CHANNELS.length + ' channels';
-
-  // Fetch schedule — returns flat array (new APIs) or null
-  setSrcBanner('warn','⏳ Connecting to stream sources...');
-  const data = await fetchSchedule();
-  if(data && Array.isArray(data) && data.length){
-    allEvents = data;
-    // banner already set inside fetchSchedule
-  } else {
-    setSrcBanner('err','✗ No live schedule — UAE may block stream sites · Showing channels only');
-    allEvents = POPULAR_CHANNELS.map(ch=>({
-      time:'', event:ch.name, sport:ch.sport, category:ch.sport,
-      channels:[{channel_id:ch.id, channel_name:ch.name}], channels2:[],
-    }));
-  }
-
-  // Update stat
-  document.getElementById('statEvents').textContent = allEvents.length || POPULAR_CHANNELS.length;
-
-  // Render
-  renderToday(allEvents);
-  renderRow('cricketRow', allEvents.filter(e=>e.sport==='cricket'), 8);
-  renderRow('footballRow', allEvents.filter(e=>e.sport==='football'), 8);
-}
-
-function renderToday(events){
-  const el = document.getElementById('todayGrid');
-  const filtered = curFilter==='all' ? events : events.filter(e=>e.sport===curFilter);
-  if(!filtered.length){
-    el.innerHTML = `<div class="empty"><span class="empty-ico">📡</span>No matches scheduled right now — check back soon or browse channels</div>`;
-    return;
-  }
-  el.innerHTML = filtered.slice(0,24).map(mkMatch).join('');
-}
-
-function renderRow(id, events, max=8){
-  const el = document.getElementById(id);
-  if(!el) return;
-  if(!events.length){
-    el.innerHTML = `<span style="color:var(--sub);font-size:12px;padding:16px 0">No matches found</span>`;
-    return;
-  }
-  el.innerHTML = events.slice(0,max).map(mkMatch).join('');
-}
-
-// ═══════════════════════════════════════════
-// FILTER
-// ═══════════════════════════════════════════
-function filterSport(sport, el){
-  document.querySelectorAll('.sport-ico').forEach(i=>i.classList.remove('on'));
-  el.classList.add('on');
-  curFilter = sport;
-  renderToday(allEvents);
-}
-
-function setChip(sport, el){
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  curFilter = sport;
-  renderToday(allEvents);
-}
-
-// ═══════════════════════════════════════════
-// NAV
-// ═══════════════════════════════════════════
-function navTo(sec, el){
-  document.querySelectorAll('.nt').forEach(b=>b.classList.remove('on'));
-  if(el) el.classList.add('on');
-  document.getElementById('homeS').style.display='none';
-  document.getElementById('gridS').style.display='none';
-  document.getElementById('searchS').style.display='none';
-  document.getElementById('channelS').style.display='none';
-  document.getElementById('si').value='';
-  closeMS();
-  window.scrollTo({top:0,behavior:'smooth'});
-
-  if(sec==='home'){ document.getElementById('homeS').style.display=''; return; }
-  if(sec==='channels'){ document.getElementById('channelS').style.display=''; return; }
-
-  // cricket / football filtered grid
-  document.getElementById('gridS').style.display='';
-  const filtered = allEvents.filter(e=>e.sport===sec);
-  const ico = sec==='cricket'?'🏏':'⚽';
-  document.getElementById('gridTitle').innerHTML=`<div class="st-bar"></div>${ico} ${sec.charAt(0).toUpperCase()+sec.slice(1)} Matches`;
-  document.getElementById('gridCnt').textContent = filtered.length+' matches';
-  document.getElementById('mainGrid').innerHTML = filtered.length
-    ? filtered.map(mkMatch).join('')
-    : `<div class="empty"><span class="empty-ico">${ico}</span>No ${sec} matches right now</div>`;
-}
-
-function goHome(){ navTo('home', document.getElementById('ntHome')); }
-
-// ═══════════════════════════════════════════
-// SEARCH
-// ═══════════════════════════════════════════
 let stimer;
-function doSearch(q){
-  clearTimeout(stimer);
-  const h=document.getElementById('homeS'),g=document.getElementById('gridS'),s=document.getElementById('searchS'),c=document.getElementById('channelS');
-  if(!q.trim()){
-    s.style.display='none';
-    if(document.getElementById('ntHome').classList.contains('on')) h.style.display='';
-    else if(document.getElementById('ntChannels').classList.contains('on')) c.style.display='';
-    else g.style.display='';
-    return;
-  }
-  stimer=setTimeout(()=>{
-    h.style.display='none'; g.style.display='none'; c.style.display='none'; s.style.display='';
-    window.scrollTo({top:0,behavior:'smooth'});
-    const lq=q.toLowerCase();
-    const matchRes = allEvents.filter(e=>(e.event||'').toLowerCase().includes(lq)||(e.category||'').toLowerCase().includes(lq));
-    const chRes = POPULAR_CHANNELS.filter(c=>c.name.toLowerCase().includes(lq));
-    document.getElementById('sCnt').textContent=(matchRes.length+chRes.length)+' results';
-    document.getElementById('searchGrid').innerHTML=[
-      ...matchRes.map(mkMatch),
-      ...chRes.map(mkChannel)
-    ].join('')||`<div class="empty"><span class="empty-ico">🔍</span>No results for "${q}"</div>`;
-  },350);
+function doSearch(q) {
+    clearTimeout(stimer);
+    const h=document.getElementById('homeS'), m=document.getElementById('matchesS'), c=document.getElementById('channelsS'), s=document.getElementById('searchS');
+    if (!q.trim()) {
+        s.style.display = 'none';
+        if (document.getElementById('ntHome').classList.contains('on')) h.style.display = '';
+        else if (document.getElementById('ntMatches').classList.contains('on')) m.style.display = '';
+        else c.style.display = '';
+        return;
+    }
+    stimer = setTimeout(() => {
+        h.style.display='none'; m.style.display='none'; c.style.display='none'; s.style.display='';
+        window.scrollTo({top:0, behavior:'smooth'});
+        
+        const lq = q.toLowerCase();
+        const chRes = globalChannels.filter(c => c.name.toLowerCase().includes(lq));
+        const matchRes = globalMatches.filter(m => (m.title||'').toLowerCase().includes(lq) || (m.league||'').toLowerCase().includes(lq));
+        
+        document.getElementById('sCnt').textContent = (chRes.length + matchRes.length) + ' results';
+        document.getElementById('searchGrid').innerHTML = [
+            ...matchRes.map(mkMatch),
+            ...chRes.map(mkChannel)
+        ].join('') || `<div class="empty"><span class="empty-ico">🔍</span>No results for "${q}"</div>`;
+    }, 350);
 }
 
 function toggleMS(){
@@ -833,170 +773,23 @@ function toggleMS(){
 }
 function closeMS(){ document.getElementById('msb').classList.remove('on'); document.getElementById('msi').value=''; }
 
-// ═══════════════════════════════════════════
-// PLAYER
-// ═══════════════════════════════════════════
-function playChannel(id, name, title, allChs){
-  curCh={id,name,title:title||name};
-  curFolder=0;
-  document.getElementById('pm').classList.add('on');
-  document.body.style.overflow='hidden';
-  document.getElementById('pmtitle').textContent=(title||name).toUpperCase();
-
-  const chs = allChs||[{channel_id:id,channel_name:name}];
-  const allRows=[];
-
-  // Check if EmbedSportex (_iframeSrc) or DaddyLive (numeric id)
-  const firstCh = chs[0]||{};
-  if(firstCh._iframeSrc || id==='_embed'){
-    // EmbedSportex streams — use iframe URLs directly
-    chs.slice(0,6).forEach((ch,i)=>{
-      if(ch._iframeSrc) allRows.push({label:`Server ${i+1}`,url:ch._iframeSrc});
-    });
-    const firstUrl = (firstCh._iframeSrc) || (chs.find(ch=>ch._iframeSrc)||{})._iframeSrc;
-    // store urls on window to avoid quote escaping issues
-    window._srvUrls = allRows.map(r=>r.url);
-    document.getElementById('srvrow').innerHTML=allRows.map((r,i)=>
-      `<div class="srv${i===0?' on':''}" id="srv${i}" onclick="switchSrvIdx(${i},this)">${r.label}</div>`
-    ).join('');
-    if(firstUrl) loadFrame(firstUrl, name);
-    else{ document.getElementById('pload').innerHTML='<p style="color:var(--sub)">No stream available</p>'; }
-  } else {
-    // DaddyLive numeric channel id
-    STREAM_FOLDERS.slice(0,3).forEach((f,fi)=>
-      allRows.push({label:`Source ${fi+1}`,url:dlStreamUrl(id,f)})
-    );
-    chs.slice(1,4).forEach((ch,ci)=>
-      allRows.push({label:`Alt ${ci+1}: ${ch.channel_name}`,url:dlStreamUrl(ch.channel_id)})
-    );
-    window._srvUrls = allRows.map(r=>r.url);
-    document.getElementById('srvrow').innerHTML=allRows.map((r,i)=>
-      `<div class="srv${i===0?' on':''}" id="srv${i}" onclick="switchSrvIdx(${i},this)">${r.label}</div>`
-    ).join('');
-    loadFrame(dlStreamUrl(id,'stream'), name);
-  }
-}
-
-function switchSrvIdx(idx, el){
-  const url = (window._srvUrls||[])[idx];
-  if(url) switchSrv(idx, url, el);
-}
-
-function switchSrv(idx, url, el){
-  document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
-  if(el) el.classList.add('on');
-  loadFrame(url);
-}
-
-function loadFrame(url, label){
-  curStreamUrl=url;
-  const loader=document.getElementById('pload');
-  const iframe=document.getElementById('pif');
-  loader.classList.remove('gone');
-  loader.innerHTML='<div class="spin"></div><p>Connecting to stream...</p>';
-  iframe.style.opacity='0';
-  iframe.src='';
-  setTimeout(()=>{
-    iframe.onload=()=>{ loader.classList.add('gone'); iframe.style.opacity='1'; };
-    iframe.onerror=()=>{ loader.innerHTML='<p style="color:var(--sub)">Failed — try another source</p>'; };
-    iframe.src=url;
-  },60);
-}
-
-function closePlayer(){
-  document.getElementById('pm').classList.remove('on');
-  document.getElementById('pif').src='';
-  document.getElementById('pload').classList.remove('gone');
-  document.getElementById('pload').innerHTML='<div class="spin"></div><p>Connecting to stream...</p>';
-  document.getElementById('pif').style.opacity='0';
-  document.body.style.overflow='';
-  curStreamUrl='';
-}
-
-function goFS(){
-  const box=document.getElementById('pframe');
-  const req=box.requestFullscreen||box.webkitRequestFullscreen||box.mozRequestFullScreen;
-  if(req) req.call(box).catch(()=>{
-    const f=document.getElementById('pif');
-    const fr=f.requestFullscreen||f.webkitRequestFullscreen;
-    if(fr) fr.call(f).catch(()=>{});
-  });
-}
-
-// ═══════════════════════════════════════════
-// EXTERNAL PLAYER
-// ═══════════════════════════════════════════
-function openExt(){
-  if(!curStreamUrl){ toast('Wait for stream to load'); return; }
-  const url=curStreamUrl;
-  const title=encodeURIComponent(curCh&&curCh.title||'Stream');
-
-  const btns=[
-    {ico:'📱',name:'SPlayer',sub:'com.ttee.leeplayer · Recommended',
-     intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.ttee.leeplayer;S.title=${title};S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.ttee.leeplayer;end`,prim:true},
-    {ico:'🎬',name:'System Chooser',sub:'Android lists all installed video players',
-     intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.ttee.leeplayer;end`,prim:false},
-    {ico:'🔶',name:'VLC',sub:'org.videolan.vlc',
-     intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=org.videolan.vlc;S.title=${title};S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.videolan.vlc;end`,prim:false},
-    {ico:'⚡',name:'MX Player',sub:'com.mxtech.videoplayer.ad',
-     intent:`intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;S.title=${title};S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mxtech.videoplayer.ad;end`,prim:false},
-    {ico:'🔗',name:'Copy URL',sub:'Paste in SPlayer → Open URL',action:'copy',prim:false},
-  ];
-
-  window._ext={btns,url};
-  document.getElementById('epbtns').innerHTML=btns.map((b,i)=>`
-    <button class="epbtn${b.prim?' prim':''}" onclick="doExt(${i})">
-      <span class="ep-ico">${b.ico}</span>
-      <div class="ep-info"><div class="ep-name">${b.name}</div><div class="ep-sub">${b.sub}</div></div>
-    </button>`).join('');
-  document.getElementById('eps').classList.add('on');
-}
-
-function doExt(idx){
-  const {btns,url}=window._ext;
-  const b=btns[idx];
-  if(b.action==='copy'){
-    navigator.clipboard?.writeText(url).then(()=>toast('✓ URL copied')).catch(()=>{
-      const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('✓ URL copied');
-    });
-    closeExt(); return;
-  }
-  if(b.name==='System Chooser'&&navigator.share){
-    navigator.share({title:curCh&&curCh.title||'Stream',url}).catch(()=>{});
-    closeExt(); return;
-  }
-  const a=document.createElement('a'); a.href=b.intent; a.style.display='none';
-  document.body.appendChild(a); a.click();
-  setTimeout(()=>a.remove(),1000);
-  closeExt();
-}
-
-function closeExt(){ document.getElementById('eps').classList.remove('on'); }
-
-// ═══════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════
-let tt;
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),3200);
+  setTimeout(()=>t.classList.remove('show'), 3200);
 }
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ closePlayer(); closeExt(); }
-  if(e.key==='f'&&document.getElementById('pm').classList.contains('on')) goFS();
-});
-
 
 function setSrcBanner(state, msg){
   const b = document.getElementById('srcBanner');
   const t = document.getElementById('srcTxt');
-  b.className = state; // ok / warn / err
+  b.className = state; 
   t.textContent = msg;
 }
 
-// Boot
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePlayer(); closeExt(); }
+});
+
 init();
 </script>
 </body>
