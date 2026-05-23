@@ -450,6 +450,36 @@ function dlStreamUrl(id, folder='stream'){
 }
 
 // ═══════════════════════════════════════════
+// HARDCODED POPULAR SPORTS CHANNELS (DaddyLive IDs)
+// ═══════════════════════════════════════════
+const POPULAR_CHANNELS = [
+  {id:'65',  name:'Sky Sports Cricket',   sport:'cricket',    ico:'🏏'},
+  {id:'346', name:'Willow Cricket',        sport:'cricket',    ico:'🏏'},
+  {id:'368', name:'SuperSport Cricket',    sport:'cricket',    ico:'🏏'},
+  {id:'598', name:'Willow Xtra',           sport:'cricket',    ico:'🏏'},
+  {id:'72',  name:'Star Sports 1',         sport:'cricket',    ico:'🏏'},
+  {id:'548', name:'A Sports HD',           sport:'cricket',    ico:'🏏'},
+  {id:'66',  name:'Sky Sports Football',   sport:'football',   ico:'⚽'},
+  {id:'77',  name:'beIN Sports 1',         sport:'football',   ico:'⚽'},
+  {id:'78',  name:'beIN Sports 2',         sport:'football',   ico:'⚽'},
+  {id:'1',   name:'ESPN',                  sport:'football',   ico:'⚽'},
+  {id:'302', name:'Sky Sports Main Event', sport:'football',   ico:'⚽'},
+  {id:'55',  name:'TNT Sports 1',          sport:'football',   ico:'⚽'},
+  {id:'56',  name:'TNT Sports 2',          sport:'football',   ico:'⚽'},
+  {id:'57',  name:'TNT Sports 3',          sport:'football',   ico:'⚽'},
+  {id:'6',   name:'Fox Sports 1',          sport:'all',        ico:'📺'},
+  {id:'7',   name:'Fox Sports 2',          sport:'all',        ico:'📺'},
+  {id:'51',  name:'NBA TV',                sport:'basketball', ico:'🏀'},
+  {id:'100', name:'Eurosport 1',           sport:'all',        ico:'📺'},
+  {id:'101', name:'Eurosport 2',           sport:'all',        ico:'📺'},
+  {id:'67',  name:'Sky Sports Golf',       sport:'golf',       ico:'⛳'},
+  {id:'20',  name:'Sky Sports Tennis',     sport:'tennis',     ico:'🎾'},
+  {id:'8',   name:'ESPN 2',                sport:'all',        ico:'📺'},
+  {id:'200', name:'beIN Sports 3',         sport:'football',   ico:'⚽'},
+  {id:'201', name:'beIN Sports 4',         sport:'football',   ico:'⚽'},
+];
+
+// ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
 let scheduleData = {};
