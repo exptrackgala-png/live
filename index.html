@@ -521,77 +521,115 @@ function embedToEvent(m, sport){
 async function fetchSchedule(){
   const bucket = { football:[], cricket:[], tennis:[], basketball:[], mma:[], motorsport:[], other:[] };
 
-  // 1. EmbedSportex — CORS open, no key, returns iframes
+  // 1. EmbedSportex — CORS open, Cloudflare CDN, works in UAE
+  //    Returns live/upcoming matches with iframe embed URLs
   try{
     const data = await tryFetch(EMBEDSPORTEX + '?cache=' + Date.now(), 8000);
     if(data && data.football !== undefined){
       (data.football||[]).forEach(m=> bucket.football.push(embedToEvent(m,'football')));
-      (data.basketball||[]).forEach(m=> bucket.other.push(embedToEvent(m,'basketball')));
+      (data.basketball||[]).forEach(m=> bucket.basketball.push(embedToEvent(m,'basketball')));
       (data.fight||[]).forEach(m=> bucket.mma.push(embedToEvent(m,'mma')));
       (data.tennis||[]).forEach(m=> bucket.tennis.push(embedToEvent(m,'tennis')));
       (data.race||[]).forEach(m=> bucket.motorsport.push(embedToEvent(m,'motorsport')));
+      (data.badminton||[]).forEach(m=> bucket.other.push(embedToEvent(m,'all')));
+      (data.volleyball||[]).forEach(m=> bucket.other.push(embedToEvent(m,'all')));
       (data.other||[]).forEach(m=> bucket.other.push(embedToEvent(m,'all')));
-      setSrcBanner('ok','✅ Streams live via EmbedSportex');
+      setSrcBanner('ok','✅ Live streams via EmbedSportex');
     }
   }catch(e){ console.warn('EmbedSportex fail:', e.message); }
 
-  // 2. SportSRC football fallback
+  // 2. SportSRC football fallback (also CORS open, CDN-hosted)
   if(!bucket.football.length){
     try{
       const d = await tryFetch(SPORTSRC + 'football', 7000);
       if(d && d.matches) d.matches.forEach(m=>bucket.football.push(embedToEvent(m,'football')));
+      if(bucket.football.length) setSrcBanner('ok','✅ Football streams via SportSRC');
     }catch(e){ console.warn('SportSRC fail:', e.message); }
   }
 
-  // 3. TheSportsDB cricket schedule (no stream, but accurate matches)
+  // 3. TheSportsDB — cricket match schedule (no stream, but real fixtures)
+  //    Free key '123', CORS open, accessible from UAE
   try{
     const today = new Date().toISOString().slice(0,10);
-    const ids = ['4346','4423','4386','4561'];
-    const all = await Promise.all(ids.map(id=>
-      fetch(TSDB_BASE + '/eventsday.php?d=' + today + '&l=' + id).then(r=>r.json()).catch(()=>null)
+    // 4346=IPL, 4423=ICC general, 4386=Intl cricket, 4561=PSL, 4562=BBL, 4573=SA20
+    const ids = ['4346','4423','4386','4561','4562','4573'];
+    const results = await Promise.all(ids.map(id=>
+      fetch(TSDB_BASE + '/eventsday.php?d=' + today + '&l=' + id)
+        .then(r=>r.json()).catch(()=>null)
     ));
-    all.forEach(data=>{
+    results.forEach(data=>{
       if(!data || !data.events) return;
       data.events.forEach(ev=>{
         bucket.cricket.push({
           time: ev.strTime ? ev.strTime.slice(0,5) : '',
           event: (ev.strHomeTeam||'?') + ' vs ' + (ev.strAwayTeam||'?'),
-          sport:'cricket', category:ev.strLeague||'Cricket',
-          _league:ev.strLeague||'', _noStream:true,
+          sport:'cricket', category: ev.strLeague||'Cricket',
+          _league: ev.strLeague||'', _noStream: true,
           channels:[], channels2:[],
         });
       });
     });
+    if(bucket.cricket.length) console.log('TSDB cricket events:', bucket.cricket.length);
   }catch(e){ console.warn('TSDB cricket fail:', e.message); }
 
-  // 4. DaddyLive mirrors async probe (bonus — cricket channels + more)
-  ;(async()=>{
-    for(const base of DL_MIRRORS){
-      try{
-        const d = await tryFetch(base + '/schedule/schedule.json', 5000);
-        activeDL = base;
-        const dlEvs = parseSchedule(d);
-        dlEvs.forEach(ev=>{
-          const arr = bucket[ev.sport] || bucket.other;
-          if(!arr.some(x=>x.event===ev.event)) arr.push(ev);
-        });
-        allEvents = flatBucket(bucket);
-        renderToday(allEvents);
-        renderRow('cricketRow', allEvents.filter(e=>e.sport==='cricket'), 8);
-        renderRow('footballRow', allEvents.filter(e=>e.sport==='football'), 8);
-        setSrcBanner('ok', '✅ Full streams: ' + base.replace('https://',''));
-        break;
-      }catch(e){ /* silent */ }
-    }
-  })();
-
+  // Update banner if nothing loaded at all
   const flat = flatBucket(bucket);
-  if(!flat.length) return null;
-  return flat;
+  if(!flat.length){
+    setSrcBanner('err','✗ No schedule data — UAE may block all sources · Browse channels below');
+  } else if(!bucket.football.length && !bucket.cricket.length){
+    setSrcBanner('warn','⚠ Partial data only');
+  }
+  return flat.length ? flat : null;
 }
 
 function flatBucket(b){
   return [...b.football,...b.cricket,...b.tennis,...b.basketball,...b.mma,...b.motorsport,...b.other];
+}
+
+function isLive(timeStr){
+  if(!timeStr) return false;
+  try{
+    const now = new Date();
+    const [h,m] = timeStr.split(':').map(Number);
+    const t = new Date(); t.setHours(h,m,0,0);
+    const diff = (now - t) / 60000;
+    return diff >= 0 && diff < 180;
+  }catch{ return false; }
+}
+
+function detectSport(cat, title){
+  const s = (cat+' '+title).toLowerCase();
+  if(s.includes('cricket')) return 'cricket';
+  if(s.includes('football')||s.includes('soccer')||s.includes('premier league')||s.includes('laliga')||s.includes('bundesliga')||s.includes('serie a')||s.includes('ligue')||s.includes('champions')||s.includes('mls')) return 'football';
+  if(s.includes('tennis')) return 'tennis';
+  if(s.includes('basketball')||s.includes('nba')) return 'basketball';
+  if(s.includes('mma')||s.includes('ufc')||s.includes('boxing')) return 'mma';
+  if(s.includes('motorsport')||s.includes('formula')||s.includes('nascar')||s.includes('f1')) return 'motorsport';
+  if(s.includes('golf')) return 'golf';
+  return 'all';
+}
+
+function parseSchedule(data){
+  if(!data) return [];
+  const events = [];
+  Object.entries(data).forEach(([dayKey, cats])=>{
+    if(typeof cats !== 'object') return;
+    Object.entries(cats).forEach(([cat, matches])=>{
+      if(!Array.isArray(matches)) return;
+      matches.forEach(m=>{
+        events.push({
+          time: m.time||'',
+          event: m.event||m.title||'—',
+          category: cat,
+          sport: detectSport(cat, m.event||''),
+          channels: m.channels||[],
+          channels2: m.channels2||[],
+          day: dayKey,
+        });
+      });
+    });
+  });
+  return events;
 }
 
 
